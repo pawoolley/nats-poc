@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+
+  nats-server:
+    # Keep this image in step with https://github.com/calculi-corp/nats/blob/main/helm_charts/values.yaml#L7
+    image: nats:2.8.4-alpine
+    container_name: nats-server
+    command: "-js --config /config/jetstream.conf --server_name S1"
+    ports:
+      - 4222:4222
+    volumes:
+      - ./nats/jetstream.conf:/config/jetstream.conf
+      - nats_data:/data/nats-server/jetstream
+
+volumes:
+  timescaledb_app_db_data: {}
+  timescaledb_test_db_data: {}
+  grafana_data: {}
+  nats_data: {}
