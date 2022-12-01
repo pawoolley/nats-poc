@@ -5,10 +5,9 @@
   "main": "dist/app.js",
   "scripts": {
     "watch": "tsc --watch",
-    "start": "tsc && node dist/app.js",
     "lint": "eslint . --ext .ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "nats": "docker "
+    "publisher": "node dist/publisher.js",
+    "subscriber": "node dist/subscriber.js"
   },
   "keywords": [],
   "author": "",
