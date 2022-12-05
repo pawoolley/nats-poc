@@ -1,5 +1,5 @@
 import {connect, ConnectionOptions, StringCodec} from "nats";
-import {servers, subjectName} from './common'
+import {createStream, servers, subjectName} from './common'
 
 const doPublish = async (connectionOptions: ConnectionOptions) => {
     try {
@@ -10,22 +10,19 @@ const doPublish = async (connectionOptions: ConnectionOptions) => {
         const natsConnectionClosed = natsConnection.closed();
 
         // Use JetStream manager to set up a stream
-        const jetStreamManager = await natsConnection.jetstreamManager();
-        const stream = subjectName;
-        const subject = subjectName;
-        await jetStreamManager.streams.add({name: stream, subjects: [subject]});
+        await createStream(natsConnection)
 
         // Create a JetStream client
         const jetStream = natsConnection.jetstream();
 
         // Publish a bunch of messages
         const codec = StringCodec()
-        const limit = 10
+        const limit = 3
         const runId = Date.now()
         for (let i = 0; i < limit; i++) {
             const message = `hello ${runId}:::${i}`
             console.info(`Publishing '${message}'`)
-            await jetStream.publish(subject, codec.encode(message))
+            await jetStream.publish(subjectName, codec.encode(message))
         }
 
         // close the connection

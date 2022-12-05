@@ -1,5 +1,5 @@
 import {connect, ConnectionOptions, consumerOpts, createInbox, NatsConnection, StringCodec} from "nats";
-import {servers, subjectName} from './common'
+import {log, servers, subjectName} from './common'
 import * as util from 'util'
 
 let natsConnection: NatsConnection
@@ -9,7 +9,7 @@ const doSubscribe = async (connectionOptions: ConnectionOptions) => {
     try {
         // Connect to NATS
         natsConnection = await connect(connectionOptions);
-        console.log(`connected to ${natsConnection.getServer()}`);
+        log(`connected to ${natsConnection.getServer()}`);
 
         // this promise indicates the client closed
         natsConnectionClosed = natsConnection.closed();
@@ -24,7 +24,7 @@ const doSubscribe = async (connectionOptions: ConnectionOptions) => {
 
         const consumerOptions = consumerOpts()
         consumerOptions.queue(queue)
-        consumerOptions.durable(durable + '2')
+        consumerOptions.durable(durable + '20')
         consumerOptions.deliverTo(inbox)
         consumerOptions.manualAck()
         // Once the consumer is set up (id'ed by the 'durable' name), changing these values after the fact has no effect.
@@ -36,34 +36,34 @@ const doSubscribe = async (connectionOptions: ConnectionOptions) => {
 
         const codec = StringCodec()
         for await (const message of subscription) {
-            console.info(`Received: ${codec.decode(message.data)} (redelivered=${message.info.redelivered}, redeliveryCount=${message.info.redeliveryCount}, deliverySequence=${message.info.deliverySequence})`)
+            log(`Received: ${codec.decode(message.data)} (redelivered=${message.info.redelivered}, redeliveryCount=${message.info.redeliveryCount}, deliverySequence=${message.info.deliverySequence})`)
             // await sleep(1000)
             message.ack();
         }
     } catch (err) {
-        console.log(`error connecting to ${JSON.stringify(connectionOptions)}`);
-        console.error(err)
+        log(`error connecting to ${JSON.stringify(connectionOptions)}`);
+        log(err)
         process.exit(1)
     }
 }
 
 const shutdown = util.callbackify(async () => {
     if (natsConnection && !natsConnection.isDraining() && !natsConnection.isClosed()) {
-        natsConnection.drain().then(() => console.log('drained')).catch((e) => console.error(e))
+        natsConnection.drain().then(() => log('drained')).catch((e) => log(e))
     }
     await natsConnectionClosed
 })
 
 process.on('SIGTERM', () => {
     shutdown((err) => {
-        if (err) console.error(err)
+        if (err) log(err)
     })
 })
 
 process.on('SIGINT', () => {
     shutdown((err) => {
-        if (err) console.error(err)
+        if (err) log(err)
     })
 })
 
-doSubscribe({servers} as ConnectionOptions).then(() => console.log("done"))
+doSubscribe({servers} as ConnectionOptions).then(() => log("done"))
